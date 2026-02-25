@@ -1,4 +1,4 @@
-# Blink Battery Level (Custom Component) — v2.0.5
+# Blink Battery Level (Custom Component) — v2.0.6
 
 Custom component Home Assistant pour exposer le **niveau de batterie (%)** des caméras Blink.
 
@@ -29,16 +29,13 @@ sensor:
 ## Entités créées
 - `sensor.blink_<nom_camera>_battery`
 
-## 2FA (SMS) — v2.0.5
-Si Blink demande un code SMS, l'intégration crée automatiquement une **notification persistante** dans Home Assistant.
+## 2FA (SMS) — v2.0.6 (flow direct)
+Le flow d’installation gère maintenant la 2FA **dans la même séquence UI**:
+1. Saisie email + mot de passe
+2. Si Blink demande un SMS, écran suivant direct pour saisir le code
+3. Validation puis création de l’intégration
 
-Ensuite, dans Home Assistant:
-- Outils de développement → **Actions**
-- Action: `blink_battery_level.submit_2fa_code`
-- Données: `{ "code": "123456" }`
-
-La notification est supprimée automatiquement après validation du code.
-Tu peux aussi préciser `entry_id` si plusieurs comptes Blink sont configurés.
+Le service `blink_battery_level.submit_2fa_code` reste disponible en secours si besoin.
 
 ## Limites connues
 - Si Blink ne retourne pas le pourcentage pour un modèle caméra, le sensor reste `unknown`.

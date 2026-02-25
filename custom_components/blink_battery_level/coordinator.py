@@ -9,7 +9,7 @@ from blinkpy.auth import BlinkTwoFARequiredError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.components import persistent_notification
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, CONF_AUTH_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +101,11 @@ async def create_coordinator(hass, config: dict):
 
     blink = Blink()
     blink.auth.no_prompt = True
+
+    auth_data = config.get(CONF_AUTH_DATA) or {}
+    if isinstance(auth_data, dict) and auth_data:
+        blink.auth.data.update(auth_data)
+
     blink.auth.data["username"] = username
     blink.auth.data["password"] = password
 

@@ -8,3 +8,4 @@ DEFAULT_SCAN_INTERVAL = 600
 
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
+CONF_AUTH_DATA = "auth_data"
