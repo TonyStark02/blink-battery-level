@@ -47,13 +47,12 @@ async def create_coordinator(hass, config: dict):
 
     blink = Blink()
 
-    async def _async_fetch_data():
-        if not getattr(blink, "user", None):
-            blink.user = {
-                "username": username,
-                "password": password,
-            }
+    # Ensure non-interactive auth in Home Assistant runtime
+    blink.auth.no_prompt = True
+    blink.auth.data["username"] = username
+    blink.auth.data["password"] = password
 
+    async def _async_fetch_data():
         # blinkpy exposes async start() on recent versions
         await blink.start()
 
