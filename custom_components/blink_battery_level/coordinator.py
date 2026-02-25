@@ -54,7 +54,8 @@ async def create_coordinator(hass, config: dict):
                 "password": password,
             }
 
-        await hass.async_add_executor_job(blink.start)
+        # blinkpy exposes async start() on recent versions
+        await blink.start()
 
         cameras = {}
         for cam_name, cam in blink.cameras.items():
