@@ -1,4 +1,4 @@
-# Blink Battery Level (Custom Component) — v2.0.6
+# Blink Battery Level (Custom Component) — v2.0.7
 
 Custom component Home Assistant pour exposer le **niveau de batterie (%)** des caméras Blink.
 
@@ -45,3 +45,13 @@ Le service `blink_battery_level.submit_2fa_code` reste disponible en secours si 
 - Vérifier logs HA (`Settings > System > Logs`)
 - En cas de 2FA, utiliser `blink_battery_level.submit_2fa_code`
 - Vérifier que `blinkpy` est bien installé via requirements
+
+## HACS update behavior
+Si HACS ne propose pas l’update immédiatement, c’est souvent un délai de cache.
+- Ouvre le repo dans HACS
+- Clique `Redownload`
+- Redémarre Home Assistant
+
+Les updates sont publiées avec:
+- bump de `manifest.json` (`version`)
+- tag/release GitHub

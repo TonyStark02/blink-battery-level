@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Blink Battery Level">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="#0f172a"/>
+  <rect x="132" y="188" width="216" height="136" rx="20" fill="none" stroke="url(#g)" stroke-width="20"/>
+  <rect x="352" y="232" width="28" height="48" rx="8" fill="url(#g)"/>
+  <rect x="152" y="208" width="96" height="96" rx="12" fill="url(#g)"/>
+  <path d="M254 126c34 0 62 26 66 58" fill="none" stroke="#38bdf8" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="328" cy="180" r="14" fill="#38bdf8"/>
+  <text x="256" y="388" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#cbd5e1">Blink Battery</text>
+</svg>
