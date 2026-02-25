@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config-entry setup (v2+ with dynamic entity discovery)."""
     try:
-        coordinator = await create_coordinator(hass, entry.data)
+        coordinator = await create_coordinator(hass, entry.data, entry_id=entry.entry_id)
     except Exception as exc:
         _LOGGER.error("Blink Battery Level entry setup failed: %s", exc)
         return

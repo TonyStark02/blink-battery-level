@@ -39,7 +39,7 @@ NOTIF_ID = "blink_battery_level_2fa_required"
 class BlinkBatteryCoordinator(DataUpdateCoordinator):
     """Coordinator for Blink battery integration with 2FA support."""
 
-    def __init__(self, hass, blink, scan_interval):
+    def __init__(self, hass, blink, scan_interval, entry_id: str | None = None):
         super().__init__(
             hass,
             _LOGGER,
@@ -48,6 +48,7 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
         )
         self.blink = blink
         self.awaiting_2fa = False
+        self.entry_id = entry_id
 
     async def _async_update_data(self):
         try:
@@ -75,6 +76,12 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             }
         return cameras
 
+    def auth_data(self) -> dict:
+        try:
+            return self.blink.auth.login_attributes
+        except Exception:
+            return {}
+
     async def async_submit_2fa_code(self, code: str) -> bool:
         try:
             ok = await self.blink.send_2fa_code(code)
@@ -89,7 +96,7 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             return False
 
 
-async def create_coordinator(hass, config: dict):
+async def create_coordinator(hass, config: dict, entry_id: str | None = None):
     try:
         from blinkpy.blinkpy import Blink
     except Exception as exc:  # pragma: no cover
@@ -109,5 +116,5 @@ async def create_coordinator(hass, config: dict):
     blink.auth.data["username"] = username
     blink.auth.data["password"] = password
 
-    coordinator = BlinkBatteryCoordinator(hass, blink, scan_interval)
+    coordinator = BlinkBatteryCoordinator(hass, blink, scan_interval, entry_id=entry_id)
     return coordinator

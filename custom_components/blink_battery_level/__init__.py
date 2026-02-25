@@ -30,7 +30,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             targets = list(coordinators.values())
 
         for coordinator in targets:
-            await coordinator.async_submit_2fa_code(code)
+            ok = await coordinator.async_submit_2fa_code(code)
+            if ok and coordinator.entry_id:
+                entry = hass.config_entries.async_get_entry(coordinator.entry_id)
+                if entry:
+                    new_data = dict(entry.data)
+                    new_data["auth_data"] = coordinator.auth_data()
+                    hass.config_entries.async_update_entry(entry, data=new_data)
 
     if not hass.services.has_service(DOMAIN, SERVICE_SUBMIT_2FA_CODE):
         hass.services.async_register(
