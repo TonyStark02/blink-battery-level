@@ -35,7 +35,7 @@ class BlinkBatteryLevelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 from blinkpy.blinkpy import Blink
-                from blinkpy.auth import BlinkTwoFARequiredError
+                from blinkpy.auth import BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 
                 self._pending_input = user_input
                 self._blink = Blink()
@@ -47,8 +47,11 @@ class BlinkBatteryLevelConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ok = await self._blink.start()
                 except BlinkTwoFARequiredError:
                     return await self.async_step_2fa()
+                except (LoginError, TokenRefreshFailed):
+                    errors["base"] = "invalid_auth"
+                    ok = False
 
-                if not ok:
+                if not ok and "base" not in errors:
                     errors["base"] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(f"{DOMAIN}_{user_input[CONF_USERNAME].lower()}")

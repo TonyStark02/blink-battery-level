@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from blinkpy.auth import BlinkTwoFARequiredError
+from blinkpy.auth import BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.components import persistent_notification
 
@@ -64,6 +64,10 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             )
             raise UpdateFailed(
                 "2FA required. Submit code via blink_battery_level.submit_2fa_code"
+            ) from exc
+        except (LoginError, TokenRefreshFailed) as exc:
+            raise UpdateFailed(
+                "Login failed (Blink). Vérifie les identifiants ou attends 10-15 min si Blink a temporairement bloqué la connexion."
             ) from exc
         except Exception as exc:
             raise UpdateFailed(str(exc)) from exc
