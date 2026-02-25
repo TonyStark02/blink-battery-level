@@ -1,7 +1,7 @@
 {
   "domain": "blink_battery_level",
   "name": "Blink Battery Level",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "documentation": "https://github.com/TonyStark02/blink-battery-level",
   "requirements": ["blinkpy>=0.22.6"],
   "codeowners": ["@TonyStark02"],

@@ -1,4 +1,4 @@
-# Blink Battery Level (Custom Component) — v3.0.0
+# Blink Battery Level (Custom Component) — v3.0.1
 
 Custom component Home Assistant pour exposer le **niveau de batterie (%)** des caméras Blink.
 
@@ -42,6 +42,8 @@ v2.0.8 améliore la persistance post-2FA: après validation du code, les donnée
 v2.0.9 améliore les erreurs de connexion Blink: distinction plus claire entre problème d’authentification et problème réseau temporaire (cooldown Blink).
 
 v3.0.0 corrige la fuite de session aiohttp (`Unclosed client session/connector`) en fermant explicitement la session Blink lors du unload de l’intégration.
+
+v3.0.1 évite la relance de login à chaque cycle: `start()` est appelé une seule fois, puis l’intégration utilise `refresh()` pour les mises à jour. Cela réduit fortement les boucles 2FA/login.
 
 ## Limites connues
 - Si Blink ne retourne pas le pourcentage pour un modèle caméra, le sensor reste `unknown`.

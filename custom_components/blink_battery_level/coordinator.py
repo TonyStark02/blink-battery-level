@@ -49,10 +49,17 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
         self.blink = blink
         self.awaiting_2fa = False
         self.entry_id = entry_id
+        self._started = False
 
     async def _async_update_data(self):
         try:
-            await self.blink.start()
+            if not self._started:
+                ok = await self.blink.start()
+                if not ok:
+                    raise UpdateFailed("Blink start failed")
+                self._started = True
+            else:
+                await self.blink.refresh(force=True)
             self.awaiting_2fa = False
         except BlinkTwoFARequiredError as exc:
             self.awaiting_2fa = True
@@ -66,6 +73,7 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
                 "2FA required. Submit code via blink_battery_level.submit_2fa_code"
             ) from exc
         except (LoginError, TokenRefreshFailed) as exc:
+            self._started = False
             raise UpdateFailed(
                 "Login failed (Blink). Vérifie les identifiants ou attends 10-15 min si Blink a temporairement bloqué la connexion."
             ) from exc
@@ -91,6 +99,7 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             ok = await self.blink.send_2fa_code(code)
             if ok:
                 self.awaiting_2fa = False
+                self._started = True
                 persistent_notification.async_dismiss(self.hass, NOTIF_ID)
                 await self.async_request_refresh()
                 return True
