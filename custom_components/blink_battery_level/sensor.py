@@ -3,18 +3,21 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import PERCENTAGE, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, PERCENTAGE
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    DOMAIN,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+)
+from .coordinator import create_coordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SCAN_INTERVAL = "scan_interval"
-DEFAULT_SCAN_INTERVAL = 600
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -26,64 +29,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    interval = config[CONF_SCAN_INTERVAL]
-
+    """Backward-compatible YAML setup."""
     try:
-        from blinkpy.blinkpy import Blink
-    except Exception as exc:  # pragma: no cover
-        _LOGGER.error("Unable to import blinkpy: %s", exc)
+        coordinator = await create_coordinator(
+            hass,
+            {
+                "username": config[CONF_USERNAME],
+                "password": config[CONF_PASSWORD],
+                "scan_interval": config[CONF_SCAN_INTERVAL],
+            },
+        )
+    except Exception as exc:
+        _LOGGER.error("Blink Battery Level setup failed: %s", exc)
         return
 
-    blink = Blink()
+    entities = [BlinkBatterySensor(coordinator, cam_name) for cam_name in coordinator.data.keys()]
+    async_add_entities(entities)
 
-    async def _async_fetch_data():
-        # Initial login/session creation if needed
-        if not getattr(blink, "user", None):
-            blink.user = {
-                "username": username,
-                "password": password,
-            }
-        await hass.async_add_executor_job(blink.start)
 
-        cameras = {}
-        for cam_name, cam in blink.cameras.items():
-            battery = None
-            # Try common fields exposed by blinkpy camera objects
-            for attr in ("battery", "battery_level", "battery_percentage"):
-                battery = getattr(cam, attr, None)
-                if battery is not None:
-                    break
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Config-entry setup (v2)."""
+    try:
+        coordinator = await create_coordinator(hass, entry.data)
+    except Exception as exc:
+        _LOGGER.error("Blink Battery Level entry setup failed: %s", exc)
+        return
 
-            # fallback from generic data blob if available
-            if battery is None:
-                try:
-                    battery = cam.attributes.get("battery")
-                except Exception:
-                    battery = None
-
-            cameras[cam_name] = {
-                "battery": battery,
-                "serial": getattr(cam, "serial", cam_name),
-            }
-
-        return cameras
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="blink_battery_level",
-        update_method=_async_fetch_data,
-        update_interval=timedelta(seconds=interval),
-    )
-
-    await coordinator.async_config_entry_first_refresh()
-
-    entities = [
-        BlinkBatterySensor(coordinator, cam_name)
-        for cam_name in coordinator.data.keys()
-    ]
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entities = [BlinkBatterySensor(coordinator, cam_name) for cam_name in coordinator.data.keys()]
     async_add_entities(entities)
 
 
@@ -93,7 +66,7 @@ class BlinkBatterySensor(CoordinatorEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:battery"
 
-    def __init__(self, coordinator: DataUpdateCoordinator, cam_name: str) -> None:
+    def __init__(self, coordinator, cam_name: str) -> None:
         super().__init__(coordinator)
         self._cam_name = cam_name
         self._attr_name = f"Blink {cam_name} Battery"

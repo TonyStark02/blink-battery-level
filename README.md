@@ -1,33 +1,39 @@
-# Blink Battery Level (Custom Component)
+# Blink Battery Level (Custom Component) — v2
 
 Custom component Home Assistant pour exposer le **niveau de batterie (%)** des caméras Blink.
 
-## Ce que ça fait
-- Se connecte à l’API Blink via `blinkpy`
-- Crée un `sensor` par caméra avec le pourcentage batterie (quand disponible)
-- Met à jour périodiquement
+## Nouveautés v2
+- ✅ **Config Flow UI** (plus besoin obligatoire de YAML)
+- ✅ Compatibilité backward avec setup YAML
+- ✅ Intervalle de scan configurable (60s à 3600s)
 
-## Installation (HACS manual/custom)
-1. Copier `custom_components/blink_battery_level` dans ton dossier Home Assistant `config/custom_components/`
+## Installation
+1. Copier `custom_components/blink_battery_level` dans `config/custom_components/`
 2. Redémarrer Home Assistant
 
-## Configuration (configuration.yaml)
+## Configuration (recommandée: UI)
+- Home Assistant → Settings → Devices & Services → Add Integration
+- Chercher **Blink Battery Level**
+- Renseigner email Blink, mot de passe, scan interval
+
+## Configuration YAML (legacy, optionnel)
 
 ```yaml
 sensor:
   - platform: blink_battery_level
     username: "TON_EMAIL_BLINK"
     password: "TON_MOT_DE_PASSE_BLINK"
-    # Optionnel
     scan_interval: 600
 ```
 
-> Remarque: si ton compte Blink utilise de la 2FA stricte, la connexion peut nécessiter adaptation (PIN challenge). Ce composant est une base pratique pour exposer le pourcentage quand l’API le renvoie.
-
 ## Entités créées
-- `sensor.blink_<nom_camera>_battery_level`
+- `sensor.blink_<nom_camera>_battery`
+
+## Limites connues
+- Si Blink ne retourne pas le pourcentage pour un modèle caméra, le sensor reste `unknown`.
+- Les entités `binary_sensor ... batterie` natives Blink peuvent coexister (état faible/ok).
 
 ## Troubleshooting
-- Vérifier les logs HA: `Settings > System > Logs`
-- Vérifier que `blinkpy` est installable dans l’environnement HA
-- Si `battery` est absent côté API Blink, le sensor passe en `unknown`
+- Vérifier logs HA (`Settings > System > Logs`)
+- Vérifier accès Blink (MFA/challenge éventuel)
+- Vérifier que `blinkpy` est bien installé via requirements
