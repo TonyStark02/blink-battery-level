@@ -99,6 +99,15 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             _LOGGER.error("2FA submit failed: %s", exc)
             return False
 
+    async def async_close(self) -> None:
+        """Close underlying Blink aiohttp session to avoid unclosed session warnings."""
+        try:
+            session = getattr(getattr(self.blink, "auth", None), "session", None)
+            if session and not session.closed:
+                await session.close()
+        except Exception as exc:
+            _LOGGER.debug("Error while closing blink session: %s", exc)
+
 
 async def create_coordinator(hass, config: dict, entry_id: str | None = None):
     try:
