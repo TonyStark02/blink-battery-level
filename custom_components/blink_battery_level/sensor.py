@@ -9,6 +9,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, PERCENTAGE
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
@@ -39,16 +40,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "scan_interval": config[CONF_SCAN_INTERVAL],
             },
         )
+        await coordinator.async_refresh()
     except Exception as exc:
         _LOGGER.error("Blink Battery Level setup failed: %s", exc)
         return
 
-    entities = [BlinkBatterySensor(coordinator, cam_name) for cam_name in coordinator.data.keys()]
+    entities = [BlinkBatterySensor(coordinator, cam_name) for cam_name in (coordinator.data or {}).keys()]
     async_add_entities(entities)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Config-entry setup (v2)."""
+    """Config-entry setup (v2+ with dynamic entity discovery)."""
     try:
         coordinator = await create_coordinator(hass, entry.data)
     except Exception as exc:
@@ -56,8 +58,26 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    entities = [BlinkBatterySensor(coordinator, cam_name) for cam_name in coordinator.data.keys()]
-    async_add_entities(entities)
+
+    known: dict[str, BlinkBatterySensor] = {}
+
+    @callback
+    def _sync_entities():
+        data = coordinator.data or {}
+        new_entities = []
+        for cam_name in data.keys():
+            if cam_name not in known:
+                ent = BlinkBatterySensor(coordinator, cam_name)
+                known[cam_name] = ent
+                new_entities.append(ent)
+        if new_entities:
+            async_add_entities(new_entities)
+
+    unsub = coordinator.async_add_listener(_sync_entities)
+    entry.async_on_unload(unsub)
+
+    await coordinator.async_refresh()
+    _sync_entities()
 
 
 class BlinkBatterySensor(CoordinatorEntity, SensorEntity):
@@ -74,7 +94,7 @@ class BlinkBatterySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        cam = self.coordinator.data.get(self._cam_name, {})
+        cam = (self.coordinator.data or {}).get(self._cam_name, {})
         val = cam.get("battery")
         if val in (None, "", "unknown"):
             return None

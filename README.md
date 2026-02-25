@@ -1,4 +1,4 @@
-# Blink Battery Level (Custom Component) — v2.0.3
+# Blink Battery Level (Custom Component) — v2.0.4
 
 Custom component Home Assistant pour exposer le **niveau de batterie (%)** des caméras Blink.
 
@@ -29,11 +29,22 @@ sensor:
 ## Entités créées
 - `sensor.blink_<nom_camera>_battery`
 
+## 2FA (SMS) — v2.0.4
+Si Blink demande un code SMS, l'intégration passe en attente 2FA.
+
+Dans Home Assistant, appelle le service:
+
+- Domaine: `blink_battery_level`
+- Service: `submit_2fa_code`
+- Données: `{ "code": "123456" }`
+
+Tu peux aussi préciser `entry_id` si plusieurs comptes Blink sont configurés.
+
 ## Limites connues
 - Si Blink ne retourne pas le pourcentage pour un modèle caméra, le sensor reste `unknown`.
 - Les entités `binary_sensor ... batterie` natives Blink peuvent coexister (état faible/ok).
 
 ## Troubleshooting
 - Vérifier logs HA (`Settings > System > Logs`)
-- Vérifier accès Blink (MFA/challenge éventuel)
+- En cas de 2FA, utiliser `blink_battery_level.submit_2fa_code`
 - Vérifier que `blinkpy` est bien installé via requirements

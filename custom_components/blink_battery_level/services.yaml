@@ -1,0 +1,12 @@
+submit_2fa_code:
+  name: Submit Blink 2FA code
+  description: Submit SMS 2FA code for Blink login.
+  fields:
+    code:
+      required: true
+      selector:
+        text:
+    entry_id:
+      required: false
+      selector:
+        text:
