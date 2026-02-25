@@ -7,6 +7,7 @@ import logging
 
 from blinkpy.auth import BlinkTwoFARequiredError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.components import persistent_notification
 
 from .const import DEFAULT_SCAN_INTERVAL
 
@@ -32,6 +33,9 @@ def _extract_battery(cam) -> int | None:
     return None
 
 
+NOTIF_ID = "blink_battery_level_2fa_required"
+
+
 class BlinkBatteryCoordinator(DataUpdateCoordinator):
     """Coordinator for Blink battery integration with 2FA support."""
 
@@ -51,8 +55,14 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             self.awaiting_2fa = False
         except BlinkTwoFARequiredError as exc:
             self.awaiting_2fa = True
+            persistent_notification.async_create(
+                self.hass,
+                "Blink demande un code SMS. Va dans Outils de développement > Actions, puis exécute le service `blink_battery_level.submit_2fa_code` avec `code: \"123456\"`.",
+                title="Blink Battery Level: code 2FA requis",
+                notification_id=NOTIF_ID,
+            )
             raise UpdateFailed(
-                "2FA required. Call service blink_battery_level.submit_2fa_code with your SMS code."
+                "2FA required. Submit code via blink_battery_level.submit_2fa_code"
             ) from exc
         except Exception as exc:
             raise UpdateFailed(str(exc)) from exc
@@ -70,6 +80,7 @@ class BlinkBatteryCoordinator(DataUpdateCoordinator):
             ok = await self.blink.send_2fa_code(code)
             if ok:
                 self.awaiting_2fa = False
+                persistent_notification.async_dismiss(self.hass, NOTIF_ID)
                 await self.async_request_refresh()
                 return True
             return False
