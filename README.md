@@ -1,4 +1,4 @@
-# Blink Battery Level (Custom Component) — v2
+# Blink Battery Level (Custom Component) — v2.0.1
 
 Custom component Home Assistant pour exposer le **niveau de batterie (%)** des caméras Blink.
 
